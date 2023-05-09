@@ -2,7 +2,9 @@ from ShazamAPI import Shazam
 from pydub import AudioSegment
 import os
 import sys
+from pathlib import Path
 
+export_dir = "export"
 
 def remove_files(dir):
     files = os.listdir(dir)
@@ -25,9 +27,10 @@ def segment_audio(audio_file):
     segments = [audio[i:i+segment_length]
                 for i in range(0, len(audio), segment_length)]
     # Save each segment as a separate file
+    basename = Path(audio_file).stem # Without extension nor path
     for i, segment in enumerate(segments):
-        segment.export(
-            f"export/{audio_file[:-4]}_segment{i+1}.mp3", format="mp3")
+        segment.export(os.path.join(export_dir,
+            f"{basename}_segment{i+1}.mp3"), format="mp3")
 
 
 def get_song_name(audio_file):
@@ -54,9 +57,11 @@ if __name__ == "__main__":
         exit()
 
     print("Starting...")
+    if not os.path.exists(export_dir):
+       os.makedirs(export_dir)
 
     print("Removing files...")
-    remove_files("export")
+    remove_files(export_dir)
 
     # get the audio file from the user input
     audio_file = sys.argv[1]
@@ -68,13 +73,13 @@ if __name__ == "__main__":
     segment_audio(audio_file)
 
     print("Getting song names...")
-    files = os.listdir("export")
+    files = os.listdir(export_dir)
     for file in files:
         write_to_file(data=f"{file}: ")
-        name = get_song_name(f"export/{file}")
+        name = get_song_name(os.path.join(export_dir, file))
         write_to_file(data=f"{name}\n")
 
     print("Cleaning up...")
-    remove_files("export")
+    remove_files(export_dir)
 
     print("Done!")
